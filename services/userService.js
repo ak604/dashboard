@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const createUser = async ( email, name, phoneNumber, designation, accessLevel, companyId, supervisorId) => {
     const userId = uuidv4();
     const existingUser = await getUserByPhone(phoneNumber);
-    if (existingUser && existingUser.length > 0){
+    if (!existingUser){
         throw new Error("user with phoneNumber already present");
     }
 
@@ -21,10 +21,10 @@ const createUser = async ( email, name, phoneNumber, designation, accessLevel, c
 };
 
 
-const getUser = async (userId) => {
+const getUser = async (companyId, userId) => {
   const params = {
     TableName: USERS_TABLE,
-    Key: { userId: userId },
+    Key: { companyId, userId },
   };
   const result = await dynamoDB.send(new GetCommand(params)); // Use `send` with the new SDK
   console.log("Query Result:", result.Item);
@@ -42,7 +42,34 @@ const getUserByPhone = async (phoneNumber) => {
   };
   const data = await dynamoDB.send(new QueryCommand(params));
   console.log("Query Result:", data.Items);
-  return data.Items;
+  return data?.Items[0];
 };
 
-module.exports = {createUser, getUser, getUserByPhone};
+const updateUser = async (user) => {
+  const params = new PutCommand({
+    TableName: USERS_TABLE,
+    Item: user,
+  });
+  await dynamoDB.send(params);
+};
+
+const getUsersByCompany = async (companyId) => {
+  const params = {
+      TableName: USERS_TABLE,
+      KeyConditionExpression: "companyId = :companyId",
+      ExpressionAttributeValues: {
+          ":companyId": companyId
+      }
+  };
+
+  try {
+      const data = await docClient.send(new QueryCommand(params));
+      console.log("Users:", data.Items);
+      return data.Items;
+  } catch (err) {
+      console.error("Error", err);
+  }
+};
+
+
+module.exports = {createUser, getUser, getUserByPhone, updateUser, getUsersByCompany};

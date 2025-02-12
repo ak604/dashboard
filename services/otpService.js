@@ -5,7 +5,9 @@ const sendOTP = async (phoneNumber, otp) => {
   const params = new PublishCommand({
     Message: `Your OTP is: ${otp}`,
     PhoneNumber: phoneNumber,
-  });
+    MessageAttributes: {
+      "AWS.SNS.SMS.SMSType": { DataType: "String", StringValue: "Transactional" }
+  } });
 
   await snsClient.send(params);
 };

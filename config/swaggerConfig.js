@@ -1,23 +1,30 @@
-// config/swaggerConfig.js
-const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 const options = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Real Estate Sales Agent Performance API",
-      version: "1.0.0",
-      description: "API documentation for tracking sales agents' call performance",
+    definition: {
+        openapi: "3.0.0",
+        info: {
+            title: "My API",
+            version: "1.0.0",
+            description: "API documentation for authentication using JWT and user-id header",
+        },
+        components: {
+            securitySchemes: {
+                BearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                }
+            },
+        },
+        security: [
+            { BearerAuth: [] },  // JWT Token Authentication
+        ],
     },
-    servers: [
-      {
-        url: "http://localhost:3000", // Change this to your production URL
-      },
-    ],
-  },
-  apis: ["./routes/*.js"], // Load all route files for documentation
+    apis: ["./routes/*.js"], // Adjust to your route files
 };
 
-const swaggerSpec = swaggerJsdoc(options);
+const swaggerSpec = swaggerJsDoc(options);
 
 module.exports = swaggerSpec;

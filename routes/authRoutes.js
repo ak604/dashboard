@@ -5,9 +5,9 @@ const router = express.Router();
 
 /**
  * @swagger
- * /auth/send-otp:
+ * /auth/sendOtp:
  *   post:
- *     summary: Send OTP to user's email
+ *     summary: Send OTP to user's phone
  *     description: Sends the generated OTP via AWS SES.
  *     requestBody:
  *       required: true
@@ -16,20 +16,20 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             properties:
- *               email:
+ *               phoneNumber:
  *                 type: string
- *                 example: "user@example.com"
+ *                 example: "+919620475359"
  *     responses:
  *       200:
  *         description: OTP sent successfully
  *       500:
  *         description: Error sending OTP
  */
-router.post("/login/otp", sendLoginOTP);
+router.post("/sendOtp", sendLoginOTP);
 
 /**
  * @swagger
- * /auth/verify-otp:
+ * /auth/verifyOtp:
  *   post:
  *     summary: Verify OTP and issue JWT
  *     description: Checks the OTP and generates a JWT token if valid.
@@ -40,9 +40,9 @@ router.post("/login/otp", sendLoginOTP);
  *           schema:
  *             type: object
  *             properties:
- *               email:
+ *               phoneNumber:
  *                 type: string
- *                 example: "user@example.com"
+ *                 example: "+919620475359"
  *               otp:
  *                 type: string
  *                 example: "123456"
@@ -61,6 +61,6 @@ router.post("/login/otp", sendLoginOTP);
  *       500:
  *         description: Error verifying OTP
  */
-router.post("/login/verify-otp", verifyLoginOTP);
+router.post("/verifyOtp", verifyLoginOTP);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const express = require("express");
 const userController = require("../controllers/userController");
-
+const authenticateJWT = require("../middlewares/authMiddleware");
 const router = express.Router();
 
 /**
@@ -9,6 +9,7 @@ const router = express.Router();
  *   post:
  *     summary: add a new user
  *     description: add a new user.
+
  *     tags: [users]
  *     requestBody:
  *       required: true
@@ -63,6 +64,6 @@ router.post("/", userController.createUser);
  *       200:
  *         description: user details returned
  */
-router.get('/:userId', userController.getUser);
+router.get('/:userId', authenticateJWT,userController.getUser);
 
 module.exports = router;
