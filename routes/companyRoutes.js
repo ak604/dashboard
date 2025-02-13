@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const authenticateJWT = require("../middlewares/authMiddleware");
 const companyController = require('../controllers/companyController');
 /**
  * @swagger
@@ -51,7 +51,7 @@ router.post('/', companyController.createCompany);
  *       200:
  *         description: Company details returned
  */
-router.get('/:companyId', companyController.getCompany);
+router.get('/:companyId', authenticateJWT, companyController.getCompany);
 
 
 module.exports = router;

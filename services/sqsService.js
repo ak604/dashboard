@@ -2,12 +2,13 @@ const { ReceiveMessageCommand, DeleteMessageCommand } = require('@aws-sdk/client
 const { Observable } = require('rxjs');
 const { mergeMap, retry, catchError } = require('rxjs/operators');
 const {sqsClient }= require('../config/aws');
+const audioUploadSubscriber = require('./audioUploadSubscriber');
 
 const receiveMessages = async () => {
   const params = {
     QueueUrl: process.env.SQS_AUDIO_QUEUE_URL,
     MaxNumberOfMessages: 10,
-    WaitTimeSeconds: 10, // Long polling
+    WaitTimeSeconds: 2, // Long polling
     VisibilityTimeout: 30, // Time to process before message becomes visible again
   };
 
@@ -16,7 +17,7 @@ const receiveMessages = async () => {
     const { Messages } = await sqsClient.send(command);
     return Messages || [];
   } catch (error) {
-    console.error('❌ Error receiving messages:', error);
+    console.error('Error receiving messages:', error);
     return [];
   }
 };
@@ -28,10 +29,10 @@ const sqsMessageStream = new Observable((subscriber) => {
 
   const pollQueue = async () => {
     while (true) {
-      const messages = await receiveMessages();
+      const messages = 
+      await receiveMessages();
       messages.forEach((message) => subscriber.next(message));
 
-      // Prevent aggressive looping when there are no messages
       if (messages.length === 0) {
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
@@ -41,17 +42,23 @@ const sqsMessageStream = new Observable((subscriber) => {
   pollQueue();
 }).pipe(
   mergeMap(async (message) => {
-    console.log('📩 Processing message:', message.Body);
-    
-    // Simulate business logic (e.g., save to DB)
-    await new Promise((resolve) => setTimeout(resolve, 500)); 
-    
-    await deleteMessage(message.ReceiptHandle);
+    try{
+    console.log('Processing message:', message.Body);
+    await audioUploadSubscriber.processMessage(message)
+    const deleteParams = {
+      QueueUrl: process.env.SQS_AUDIO_QUEUE_URL,
+      ReceiptHandle: message.ReceiptHandle // Needed for deletion
+    };
+    const deleteCommand = new DeleteMessageCommand(deleteParams);
+    await sqsClient.send(deleteCommand);
+    }catch(error){
+      console.log("error while processing message", error);
+    }
     return message;
   }),
   retry({ count: 5, delay: 3000 }), // Automatic retry on failure
   catchError((error) => {
-    console.error('🚨 Stream error:', error);
+    console.error('Stream error:', error);
     return [];
   })
 );

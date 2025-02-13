@@ -1,6 +1,6 @@
 
 const { SQSClient } = require('@aws-sdk/client-sqs');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand,GetObjectCommand } = require('@aws-sdk/client-s3');
 const { credential, awsRegion } = require("../config/credentials");
 const { SNSClient, PublishCommand } = require("@aws-sdk/client-sns");
 
@@ -18,4 +18,4 @@ const s3Client = new S3Client({
   credentials: credential
 });
 
-module.exports = {s3Client, sqsClient , snsClient, PutObjectCommand, PublishCommand};
+module.exports = {s3Client, sqsClient , snsClient, PutObjectCommand, GetObjectCommand, PublishCommand};

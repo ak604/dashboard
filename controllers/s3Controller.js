@@ -23,10 +23,9 @@ const generatePreSignedUrl = async (req, res) => {
             TableName: CALLS_TABLE,
             Item: {
                 callId: callId,  
-                userId:"A",
-                companyId:"B",
+                userId: req.userId,
+                companyId: req.companyId,
                 recordingUrl : uploadURL,
-                uploadedAt: new Date().toISOString(),
                 createdAt: new Date().toISOString(),
             },
         });

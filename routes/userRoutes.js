@@ -45,7 +45,7 @@ const router = express.Router();
  *       500:
  *         description: Error adding user
  */
-router.post("/", userController.createUser);
+router.post("/", authenticateJWT, userController.createUser);
 
 /**
  * @swagger

@@ -1,6 +1,6 @@
 const express = require("express");
 const { generatePreSignedUrl } = require("../controllers/s3Controller");
-
+const authenticateJWT = require("../middlewares/authMiddleware");
 const router = express.Router();
 
 /**
@@ -22,12 +22,6 @@ const router = express.Router();
  *         schema:
  *           type: string
  *         description: The MIME type of the file (e.g., image/png, application/pdf)
- *       - in: query
- *         name: fileSize
- *         required: true
- *         schema:
- *           type: integer
- *         description: file size
  *     responses:
  *       200:
  *         description: Successfully generated presigned URL
@@ -44,6 +38,6 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.get("/generate-presigned-url", generatePreSignedUrl);
+router.get("/generate-presigned-url", authenticateJWT,generatePreSignedUrl);
 
 module.exports = router;
