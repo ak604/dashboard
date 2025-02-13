@@ -5,27 +5,29 @@ const { v4: uuidv4 } = require('uuid');
 
 const generatePreSignedUrl = async (req, res) => {
     try {
-        const { fileName, fileType } = req.query;
+        const { fileName, fileType} = req.query;
         if (!fileName || !fileType) {
             return res.status(400).json({ error: "Missing fileName or fileType" });
         }
-
         const command = new PutObjectCommand({
             Bucket: process.env.AUDIO_BUCKET,
             Key: fileName,
             ContentType: fileType,
         });
-
-        // Generate signed URL (valid for 60 seconds)
+        const arr = fileName.split('/');
+        const callId = arr[2];
+        const customerPhoneNumber = arr[1];
         const uploadURL = await getSignedUrl(s3Client, command, { expiresIn: 60 });
-        const callId = uuidv4();
+
         const dbCommand = new PutCommand({
             TableName: CALLS_TABLE,
             Item: {
                 callId: callId,  
                 userId: req.userId,
                 companyId: req.companyId,
-                recordingUrl : uploadURL,
+                fileName : fileName,
+                fileType : fileType,
+                customerPhoneNumber :customerPhoneNumber,
                 createdAt: new Date().toISOString(),
             },
         });
