@@ -9,6 +9,7 @@ const router = express.Router();
  *   post:
  *     summary: Send OTP to user's phone
  *     description: Sends the generated OTP via AWS SES.
+ *     tags: [auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -33,6 +34,7 @@ router.post("/sendOtp", sendLoginOTP);
  *   post:
  *     summary: Verify OTP and issue JWT
  *     description: Checks the OTP and generates a JWT token if valid.
+ *     tags: [auth]
  *     requestBody:
  *       required: true
  *       content:

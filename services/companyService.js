@@ -31,7 +31,7 @@ const getCompany = async (companyId) => {
     Key: { companyId: companyId },
   };
 
-  const result = await dynamoDB.send(new GetCommand(params)); // Use `send` with the new SDK
+  const result = await dynamoDB.send(new GetCommand(params));
   return result.Item;
 };
 

@@ -10,7 +10,6 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swaggerConfig");
 const companyRoutes = require('./routes/companyRoutes');
 const callRoutes = require('./routes/callRoutes');
-const performanceRoutes = require('./routes/performanceRoutes');
 const logger = require('./utils/logger');
 const getSecret = require("./config/secret"); 
 const authRoutes = require("./routes/authRoutes");
@@ -27,7 +26,6 @@ app.use(cors());
 // Use Routes
 app.use("/companies", companyRoutes);
 app.use('/calls', callRoutes);
-app.use('/performance', performanceRoutes);
 app.use("/s3", s3Routes);
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
