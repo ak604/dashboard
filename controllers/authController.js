@@ -2,6 +2,9 @@ const otpService = require("../services/otpService");
 const userService = require("../services/userService");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const appService = require('../services/appService');
+const authService = require('../services/authService');
+const logger = require('../utils/logger');
 
 const sendLoginOTP = async (req, res) => {
   try {
@@ -41,4 +44,42 @@ const verifyLoginOTP = async (req, res) => {
   }
 };
 
-module.exports = { sendLoginOTP, verifyLoginOTP };
+/**
+ * Verify Google token and return JWT
+ */
+const verifyGoogleToken = async (req, res) => {
+    try {
+        const { token, packageId } = req.body;
+        
+        // Verify Google token
+        const googleUser = await authService.verifyGoogleToken(token);
+
+        // Get or create user
+        const user = await authService.getOrCreateUser(googleUser, packageId);
+
+        // Generate JWT - No session needed
+        const jwtToken = authService.generateJWTToken(user, packageId);
+
+        // Return token to client
+        res.json({
+            success: true,
+            data: {
+                token: jwtToken,
+                user: {
+                    userId: user.userId,
+                    name: user.name,
+                    email: user.email,
+                    picture: user.picture,
+                    accessLevel: user.accessLevel
+                }
+            }
+        });
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            message: 'Invalid Google token'
+        });
+    }
+};
+
+module.exports = { sendLoginOTP, verifyLoginOTP, verifyGoogleToken };

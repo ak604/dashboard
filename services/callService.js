@@ -1,5 +1,4 @@
-
-const { dynamoDB, QueryCommand, CALLS_TABLE } = require('../config/db');
+const { dynamoDB, QueryCommand, GetCommand, CALLS_TABLE } = require('../config/db');
 
 const getCallsByUserId = async (userId) => {
   const params = {
@@ -14,4 +13,17 @@ const getCallsByUserId = async (userId) => {
   return result.Items;
 };
 
-module.exports = { getCallsByUserId };
+const getCallByUserIdAndCallId = async (userId, callId) => {
+  const params = {
+    TableName: CALLS_TABLE,
+    Key: {
+      userId: userId,
+      callId: callId
+    }
+  };
+
+  const result = await dynamoDB.send(new GetCommand(params));
+  return result.Item;
+};
+
+module.exports = { getCallsByUserId, getCallByUserIdAndCallId };

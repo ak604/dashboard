@@ -18,12 +18,34 @@ const createTable = async (params) => {
 // 📌 Define Tables
 const tables = [
     {
+        TableName: "Apps",
+        KeySchema: [
+            { AttributeName: "appId", KeyType: "HASH" }  // Primary Key
+        ],
+        AttributeDefinitions: [
+            { AttributeName: "appId", AttributeType: "S" },
+            { AttributeName: "packageId", AttributeType: "S" }
+        ],
+        ProvisionedThroughput: {
+            ReadCapacityUnits: 1,
+            WriteCapacityUnits: 1
+        },
+        GlobalSecondaryIndexes: [
+            {
+                IndexName: "PackageIdIndex",
+                KeySchema: [{ AttributeName: "packageId", KeyType: "HASH" }],
+                Projection: { ProjectionType: "ALL" },
+                ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 }
+            }
+        ]
+    },
+    {
         TableName: "Companies",
-        KeySchema: [{ AttributeName: "companyId", KeyType: "HASH" }], // Primary Key
+        KeySchema: [{ AttributeName: "companyId", KeyType: "HASH" }],
         AttributeDefinitions: [
             { AttributeName: "companyId", AttributeType: "S" },
-            { AttributeName: "phoneNumber", AttributeType: "S" } 
-            ],
+            { AttributeName: "phoneNumber", AttributeType: "S" }
+        ],
         ProvisionedThroughput: {
             ReadCapacityUnits: 1,
             WriteCapacityUnits: 1
@@ -31,8 +53,8 @@ const tables = [
         GlobalSecondaryIndexes: [
             {
                 IndexName: "CompanyPhoneIndex",
-                KeySchema: [{ AttributeName: "phoneNumber", KeyType: "HASH" }], // Partition Key for GSI
-                Projection: { ProjectionType: "ALL" }, // Include all attributes
+                KeySchema: [{ AttributeName: "phoneNumber", KeyType: "HASH" }],
+                Projection: { ProjectionType: "ALL" },
                 ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 }
             }
         ]
@@ -40,25 +62,30 @@ const tables = [
     {
         TableName: "Users",
         KeySchema: [
-            { AttributeName: "companyId", KeyType: "HASH" },  // Partition Key
-            { AttributeName: "userId", KeyType: "RANGE" }  // Sort Key
+            { AttributeName: "contextId", KeyType: "HASH" },  // Changed from companyId
+            { AttributeName: "userId", KeyType: "RANGE" }
         ],
         AttributeDefinitions: [
             { AttributeName: "userId", AttributeType: "S" },
-            { AttributeName: "companyId", AttributeType: "S" },
-            { AttributeName: "phoneNumber", AttributeType: "S" } 
+            { AttributeName: "contextId", AttributeType: "S" },  // Changed from companyId
+            { AttributeName: "email", AttributeType: "S" },
+            { AttributeName: "phoneNumber", AttributeType: "S" }
         ],
-        ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 },
-    
-        // ✅ Global Secondary Index (GSI) on companyId
         GlobalSecondaryIndexes: [
             {
                 IndexName: "UserPhoneIndex",
-                KeySchema: [{ AttributeName: "phoneNumber", KeyType: "HASH" }], // Partition Key for GSI
-                Projection: { ProjectionType: "ALL" }, // Include all attributes
+                KeySchema: [{ AttributeName: "phoneNumber", KeyType: "HASH" }],
+                Projection: { ProjectionType: "ALL" },
+                ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 }
+            },
+            {
+                IndexName: "UserEmailIndex",
+                KeySchema: [{ AttributeName: "email", KeyType: "HASH" }],
+                Projection: { ProjectionType: "ALL" },
                 ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 }
             }
-        ]
+        ],
+        ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 }
     },
     {
         TableName: "Calls",
@@ -91,5 +118,4 @@ const createAllTables = async () => {
     }
 };
 
-// 📌 Run the function to create the tables
 createAllTables();
