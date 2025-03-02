@@ -131,4 +131,61 @@ const router = express.Router();
  */
 router.get('/', authenticateJWT, callController.getCalls);
 
+/**
+ * @swagger
+ * /calls/{callId}/process:
+ *   get:
+ *     summary: Process call transcription with a template
+ *     tags: [call]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: callId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: templateName
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: contextId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Processed result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     processingResult:
+ *                       type: string
+ *                     modelUsed:
+ *                       type: string
+ *                     tokensUsed:
+ *                       type: object
+ *                       properties:
+ *                         prompt_tokens:
+ *                           type: number
+ *                         completion_tokens:
+ *                           type: number
+ *       400:
+ *         description: Missing parameters or no transcription
+ *       404:
+ *         description: Call or template not found
+ *       500:
+ *         description: Processing error
+ */
+router.get('/:callId/process', authenticateJWT, callController.processCall);
+
 module.exports = router;
