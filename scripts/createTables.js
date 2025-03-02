@@ -96,15 +96,15 @@ const tables = [
         AttributeDefinitions: [
             { AttributeName: "userId", AttributeType: "S" },
             { AttributeName: "callId", AttributeType: "S" },
-            { AttributeName: "companyId", AttributeType: "S" } // Required for GSI
+            { AttributeName: "contextId", AttributeType: "S" } // Required for GSI
         ],
         ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 },
     
         // ✅ Global Secondary Index (GSI) on companyId
         GlobalSecondaryIndexes: [
             {
-                IndexName: "CompanyIndex",
-                KeySchema: [{ AttributeName: "companyId", KeyType: "HASH" }], // Partition Key for GSI
+                IndexName: "ContextIdIndex",
+                KeySchema: [{ AttributeName: "contextId", KeyType: "HASH" }], // Partition Key for GSI
                 Projection: { ProjectionType: "ALL" }, // Include all attributes
                 ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 }
             }

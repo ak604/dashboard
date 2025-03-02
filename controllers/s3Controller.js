@@ -9,25 +9,26 @@ const generatePreSignedUrl = async (req, res) => {
         if (!fileName || !fileType) {
             return res.status(400).json({ error: "Missing fileName or fileType" });
         }
+        const contextId= req.user.contextId;
+        const userId = req.user.userId;
         const command = new PutObjectCommand({
             Bucket: process.env.AUDIO_BUCKET,
-            Key: fileName,
+            Key: contextId + "/" + userId + "/" + fileName ,
             ContentType: fileType,
         });
-        const arr = fileName.split('/');
-        const callId = arr[2];
-        const customerPhoneNumber = arr[1];
+       
         const uploadURL = await getSignedUrl(s3Client, command, { expiresIn: 60 });
 
+        const [callId,] = fileName.split('.');
         const dbCommand = new PutCommand({
             TableName: CALLS_TABLE,
             Item: {
                 callId: callId,  
-                userId: req.userId,
-                companyId: req.companyId,
+                userId: userId,
+                contextId: contextId,
                 fileName : fileName,
                 fileType : fileType,
-                customerPhoneNumber :customerPhoneNumber,
+
                 createdAt: new Date().toISOString(),
             },
         });

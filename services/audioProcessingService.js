@@ -159,8 +159,8 @@ class AudioProcessingService {
                 const transcription = await transcribeService.transcribeAudio(fileKey, audioBuffer);
 
                 // Parse user and call IDs from file key
-                const [userId, , callId] = fileKey.split('/');
-                
+                const [,userId , fileName] = fileKey.split('/');
+                const [callId, ] = fileName.split('.');
                 if (!userId || !callId) {
                     console.error(`Invalid file key format: ${fileKey}`);
                     return; // Skip this record but continue with others
