@@ -1,16 +1,48 @@
 const { dynamoDB, QueryCommand, GetCommand, UpdateCommand, CALLS_TABLE } = require('../config/db');
 
-const getCallsByUserId = async (userId) => {
-  const params = {
-    TableName: CALLS_TABLE,
-    KeyConditionExpression: 'userId = :userId',
-    ExpressionAttributeValues: {
-      ':userId': userId
-    }
-  };
+const getCallsByUserId = async (userId, limit = 10, nextToken = null) => {
+  try {
+    const params = {
+      TableName: CALLS_TABLE,
+      KeyConditionExpression: 'userId = :userId',
+      ExpressionAttributeValues: {
+        ':userId': userId
+      },
+      Limit: limit,
+      ScanIndexForward: false // Get newest calls first
+    };
 
-  const result = await dynamoDB.send(new QueryCommand(params));
-  return result.Items;
+    // Only add ExclusiveStartKey if nextToken is provided and valid
+    if (nextToken && nextToken.trim() !== '') {
+      try {
+        const decodedToken = Buffer.from(nextToken, 'base64').toString();
+        const parsedToken = JSON.parse(decodedToken);
+        
+        // Ensure the token has the required keys before using it
+        if (parsedToken && parsedToken.userId && parsedToken.callId) {
+          params.ExclusiveStartKey = parsedToken;
+        }
+      } catch (err) {
+        console.warn("Invalid pagination token:", err);
+        // Continue without the ExclusiveStartKey if token is invalid
+      }
+    }
+
+    const result = await dynamoDB.send(new QueryCommand(params));
+
+    // Generate the next token only if LastEvaluatedKey exists
+    const newNextToken = result.LastEvaluatedKey 
+      ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString('base64')
+      : null;
+
+    return {
+      items: result.Items || [],
+      nextToken: newNextToken
+    };
+  } catch (error) {
+    console.error("Error retrieving calls:", error);
+    throw new Error(`Failed to retrieve calls: ${error.message}`);
+  }
 };
 
 const getCallByUserIdAndCallId = async (userId, callId) => {

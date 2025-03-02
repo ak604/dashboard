@@ -5,26 +5,33 @@ const aiService = require('../services/aiService');
 
 const getCalls = async (req, res) => {
   try {
-    // Extract userId from JWT token instead of query parameters
     const userId = req.user.userId;
-    const { callId } = req.query;
-
-    // If callId is provided, return single call
-    if (callId) {
-      const call = await callService.getCallByUserIdAndCallId(userId, callId);
-      if (!call) {
-        return res.status(404).send({ message: 'Call not found' });
-      }
-      return res.status(200).send(call);
+    const limit = parseInt(req.query.limit) || 10;
+    const { nextToken } = req.query;
+    
+    // Validate limit
+    if (isNaN(limit) || limit < 1 || limit > 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Limit must be a number between 1 and 100'
+      });
     }
 
-    // Otherwise return all calls for the user
-    const calls = await callService.getCallsByUserId(userId);
-    res.status(200).send(calls);
-
+    // Get paginated results
+    const result = await callService.getCallsByUserId(userId, limit, nextToken);
+    
+    res.json({
+      success: true,
+      data: result.items,
+      nextToken: result.nextToken
+    });
   } catch (error) {
     logger.error('Error retrieving calls: ', error);
-    res.status(500).send({ message: 'Error retrieving calls', error });
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving calls',
+      error: error.message
+    });
   }
 };
 

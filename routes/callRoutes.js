@@ -21,71 +21,37 @@ const router = express.Router();
  *           type: string
  *         description: Optional - Specific call ID to retrieve a single call
  *         example: "call456"
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Maximum number of calls to return (1-100)
+ *       - in: query
+ *         name: nextToken
+ *         schema:
+ *           type: string
+ *         description: Pagination token for next page of results
  *     responses:
  *       200:
- *         description: Successfully retrieved call(s)
+ *         description: Successfully retrieved calls
  *         content:
  *           application/json:
  *             schema:
- *               oneOf:
- *                 - type: object
- *                   description: Single call object when callId is provided
- *                   properties:
- *                     callId:
- *                       type: string
- *                       example: "call456"
- *                     userId:
- *                       type: string
- *                       example: "user123"
- *                     companyId:
- *                       type: string
- *                       example: "company789"
- *                     fileName:
- *                       type: string
- *                       example: "user123/+1234567890/call456.wav"
- *                     fileType:
- *                       type: string
- *                       example: "audio/wav"
- *                     customerPhoneNumber:
- *                       type: string
- *                       example: "+1234567890"
- *                     transcription:
- *                       type: string
- *                       example: "This is the transcribed text of the call"
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2024-01-20T10:30:00Z"
- *                 - type: array
- *                   description: Array of calls when no callId is provided
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
  *                   items:
- *                     type: object
- *                     properties:
- *                       callId:
- *                         type: string
- *                         example: "call456"
- *                       userId:
- *                         type: string
- *                         example: "user123"
- *                       companyId:
- *                         type: string
- *                         example: "company789"
- *                       fileName:
- *                         type: string
- *                         example: "user123/+1234567890/call456.wav"
- *                       fileType:
- *                         type: string
- *                         example: "audio/wav"
- *                       customerPhoneNumber:
- *                         type: string
- *                         example: "+1234567890"
- *                       transcription:
- *                         type: string
- *                         example: "This is the transcribed text of the call"
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                         example: "2024-01-20T10:30:00Z"
+ *                     $ref: '#/components/schemas/Call'
+ *                 nextToken:
+ *                   type: string
+ *                   description: Token for next page of results
+ *                   example: "eyJ1c2VySWQiOiJ1c2VyMTIzIiwiY2FsbElkIjoiY2FsbDQ1NiJ9"
  *       401:
  *         description: Authentication required
  *         content:
