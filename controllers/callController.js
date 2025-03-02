@@ -66,13 +66,21 @@ const processCall = async (req, res) => {
 
         const result = await aiService.processWithTemplate(call.transcription, template);
         
+        // Store processing result in call table
+        const processingResult = result.choices[0].message.content;
+        await callService.updateCallTemplates(
+          userId, 
+          callId,
+          templateName,
+          processingResult
+        );
+
+        // Get updated call object
+        const updatedCall = await callService.getCallByUserIdAndCallId(userId, callId);
+
         return res.json({
           success: true,
-          data: {
-            processingResult: result.choices[0].message.content,
-            modelUsed: result.model,
-            tokensUsed: result.usage
-          }
+          data: updatedCall
         });
       }
 

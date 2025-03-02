@@ -169,7 +169,11 @@ router.get('/', authenticateJWT, callController.getCalls);
  *         description: Maximum wait time in milliseconds (default 30000)
  *     responses:
  *       200:
- *         description: Processed result
+ *         description: Updated call object with processing result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Call'
  *       408:
  *         description: Transcription not available within timeout period
  *       400:
