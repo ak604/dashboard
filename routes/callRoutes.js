@@ -8,19 +8,12 @@ const router = express.Router();
  * @swagger
  * /calls:
  *   get:
- *     summary: Get calls for a user
- *     description: Fetch all calls for a user or a specific call if callId is provided
+ *     summary: Get calls for the authenticated user
+ *     description: Fetch all calls for the authenticated user or a specific call if callId is provided
  *     tags: [call]
  *     security:
  *       - BearerAuth: []
  *     parameters:
- *       - in: query
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the user
- *         example: "user123"
  *       - in: query
  *         name: callId
  *         required: false
@@ -93,16 +86,26 @@ const router = express.Router();
  *                         type: string
  *                         format: date-time
  *                         example: "2024-01-20T10:30:00Z"
- *       400:
- *         description: Bad request - Missing required parameters
+ *       401:
+ *         description: Authentication required
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 message:
+ *                 error:
  *                   type: string
- *                   example: "userId is required"
+ *                   example: "Authentication required"
+ *       403:
+ *         description: Invalid or expired token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid or expired token"
  *       404:
  *         description: Call not found
  *         content:

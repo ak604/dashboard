@@ -109,7 +109,22 @@ const tables = [
                 ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 }
             }
         ]
-    }]
+    },
+    {
+        TableName: 'Templates',
+        KeySchema: [
+          { AttributeName: 'contextId', KeyType: 'HASH' },
+          { AttributeName: 'templateName', KeyType: 'RANGE' }
+        ],
+        AttributeDefinitions: [
+          { AttributeName: 'contextId', AttributeType: 'S' },
+          { AttributeName: 'templateName', AttributeType: 'S' }
+        ],
+        ProvisionedThroughput: {
+          ReadCapacityUnits: 5,
+          WriteCapacityUnits: 5
+        }
+      }]
 
 // 📌 Create all tables
 const createAllTables = async () => {

@@ -3,11 +3,9 @@ const logger = require('../utils/logger');
 
 const getCalls = async (req, res) => {
   try {
-    const { userId, callId } = req.query;
-
-    if (!userId) {
-      return res.status(400).send({ message: 'userId is required' });
-    }
+    // Extract userId from JWT token instead of query parameters
+    const userId = req.user.userId;
+    const { callId } = req.query;
 
     // If callId is provided, return single call
     if (callId) {
