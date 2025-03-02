@@ -135,7 +135,7 @@ router.get('/', authenticateJWT, callController.getCalls);
  * @swagger
  * /calls/{callId}/process:
  *   get:
- *     summary: Process call transcription with a template
+ *     summary: Process call transcription with a template (long polling)
  *     tags: [call]
  *     security:
  *       - BearerAuth: []
@@ -155,32 +155,25 @@ router.get('/', authenticateJWT, callController.getCalls);
  *         required: true
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: pollInterval
+ *         schema:
+ *           type: integer
+ *           default: 2000
+ *         description: Polling interval in milliseconds (default 2000)
+ *       - in: query
+ *         name: timeout
+ *         schema:
+ *           type: integer
+ *           default: 30000
+ *         description: Maximum wait time in milliseconds (default 30000)
  *     responses:
  *       200:
  *         description: Processed result
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *                   properties:
- *                     processingResult:
- *                       type: string
- *                     modelUsed:
- *                       type: string
- *                     tokensUsed:
- *                       type: object
- *                       properties:
- *                         prompt_tokens:
- *                           type: number
- *                         completion_tokens:
- *                           type: number
+ *       408:
+ *         description: Transcription not available within timeout period
  *       400:
- *         description: Missing parameters or no transcription
+ *         description: Missing parameters
  *       404:
  *         description: Call or template not found
  *       500:

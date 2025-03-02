@@ -29,54 +29,66 @@ const getCalls = async (req, res) => {
 };
 
 const processCall = async (req, res) => {
+  const MAX_POLL_TIME = 30000; // 30 seconds max
+  const DEFAULT_POLL_INTERVAL = 2000; // 2 seconds
+  
   try {
     const { callId } = req.params;
-    const { templateName, contextId } = req.query;
-    const userId = req.user.userId; // From JWT
+    const { templateName, contextId, pollInterval = DEFAULT_POLL_INTERVAL, timeout = MAX_POLL_TIME } = req.query;
+    const userId = req.user.userId;
 
     // Validate input
     if (!templateName || !contextId) {
       return res.status(400).json({
         success: false,
-        message: 'templateName and contextId are required query parameters'
+        message: 'templateName and contextId are required'
       });
     }
 
-    // Get call details
-    const call = await callService.getCallByUserIdAndCallId(userId, callId);
-    if (!call) {
-      return res.status(404).json({ success: false, message: 'Call not found' });
-    }
-    if (!call.transcription) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Call has no transcription to process' 
-      });
-    }
+    const startTime = Date.now();
+    let call;
 
-    // Get template
-    const template = await templateService.getTemplate(contextId, templateName);
-    if (!template) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Template not found' 
-      });
-    }
-
-    // Process with Groq
-    const result = await aiService.processWithTemplate(
-      call.transcription, 
-      template
-    );
-
-    res.json({
-      success: true,
-      data: {
-        processingResult: result.choices[0].message.content,
-        modelUsed: result.model,
-        tokensUsed: result.usage
+    // Long polling loop
+    while (Date.now() - startTime < timeout) {
+      // Get call details
+      call = await callService.getCallByUserIdAndCallId(userId, callId);
+      
+      if (!call) {
+        return res.status(404).json({ success: false, message: 'Call not found' });
       }
+
+      if (call.transcription) {
+        // Transcription available - proceed to process
+        const template = await templateService.getTemplate(contextId, templateName);
+        if (!template) {
+          return res.status(404).json({ success: false, message: 'Template not found' });
+        }
+
+        const result = await aiService.processWithTemplate(call.transcription, template);
+        
+        return res.json({
+          success: true,
+          data: {
+            processingResult: result.choices[0].message.content,
+            modelUsed: result.model,
+            tokensUsed: result.usage
+          }
+        });
+      }
+
+      // Wait for the poll interval or remaining time
+      const remainingTime = timeout - (Date.now() - startTime);
+      await new Promise(resolve => 
+        setTimeout(resolve, Math.min(pollInterval, remainingTime))
+      );
+    }
+
+    // Timeout reached
+    res.status(408).json({
+      success: false,
+      message: 'Transcription not available within timeout period'
     });
+
   } catch (error) {
     console.error('Error processing call:', error);
     res.status(500).json({
