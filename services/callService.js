@@ -1,4 +1,4 @@
-const { dynamoDB, QueryCommand, GetCommand, UpdateCommand, CALLS_TABLE } = require('../config/db');
+const { dynamoDB, QueryCommand, GetCommand, UpdateCommand, CALLS_TABLE, DeleteCommand } = require('../config/db');
 
 const getCallsByUserId = async (userId, limit = 10, nextToken = null) => {
   try {
@@ -119,8 +119,34 @@ const updateCallTemplates = async (userId, callId, templateName, processingResul
   }
 };
 
+const deleteCall = async (userId, callId) => {
+  try {
+    const params = {
+      TableName: CALLS_TABLE,
+      Key: {
+        userId: userId,
+        callId: callId
+      },
+      ReturnValues: "ALL_OLD"
+    };
+
+    const result = await dynamoDB.send(new DeleteCommand(params));
+    
+    // If no item was found to delete
+    if (!result.Attributes) {
+      return null;
+    }
+    
+    return result.Attributes;
+  } catch (error) {
+    console.error("Error deleting call:", error);
+    throw new Error(`Failed to delete call: ${error.message}`);
+  }
+};
+
 module.exports = { 
   getCallsByUserId, 
   getCallByUserIdAndCallId,
-  updateCallTemplates
+  updateCallTemplates,
+  deleteCall
 };

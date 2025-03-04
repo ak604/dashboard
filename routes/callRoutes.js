@@ -151,4 +151,51 @@ router.get('/', authenticateJWT, callController.getCalls);
  */
 router.get('/:callId/process', authenticateJWT, callController.processCall);
 
+/**
+ * @swagger
+ * /calls/{callId}:
+ *   delete:
+ *     summary: Delete a specific call
+ *     description: Deletes a call by ID. Only the owner of the call can delete it.
+ *     tags: [call]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: callId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the call to delete
+ *     responses:
+ *       200:
+ *         description: Call deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Call deleted successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     callId:
+ *                       type: string
+ *                       example: abc123
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Not authenticated
+ *       404:
+ *         description: Call not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/:callId', authenticateJWT, callController.deleteCall);
+
 module.exports = router;

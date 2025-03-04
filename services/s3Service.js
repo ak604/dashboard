@@ -1,4 +1,4 @@
-const {s3Client, PutObjectCommand, GetObjectCommand} = require("../config/aws");
+const { s3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require("../config/aws");
 const uploadStringToS3 = async (bucketName, fileKey, content) => {
     try {
         const params = {
@@ -32,4 +32,23 @@ const streamToBuffer = async (stream) => {
     return Buffer.concat(chunks);
 };
 
-module.exports = {uploadStringToS3, getAudioFromS3}
+// Fixed delete function
+const deleteFileFromS3 = async (bucketName, fileKey) => {
+    try {
+        const params = {
+            Bucket: bucketName,
+            Key: fileKey
+        };
+
+        const command = new DeleteObjectCommand(params);
+        await s3Client.send(command);
+        
+        console.log(`File deleted successfully from S3: ${fileKey}`);
+        return true;
+    } catch (error) {
+        console.error("Error deleting file from S3:", error);
+        throw new Error(`Failed to delete file from S3: ${error.message}`);
+    }
+};
+
+module.exports = { uploadStringToS3, getAudioFromS3, deleteFileFromS3 };

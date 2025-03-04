@@ -33,7 +33,7 @@ const generatePreSignedUrl = async (req, res) => {
                 fileName : fileName,
                 fileType : fileType,
                 createdAt: new Date().toISOString(),
-                // Add the duration if provided
+                expires_at: Math.floor(Date.now() / 1000) + 30*86400 ,
                 ...(duration !== null && { durationSeconds: duration })
             },
         });

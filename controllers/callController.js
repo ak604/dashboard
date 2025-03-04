@@ -2,6 +2,7 @@ const callService = require('../services/callService');
 const logger = require('../utils/logger');
 const templateService = require('../services/templateService');
 const aiService = require('../services/aiService');
+const s3Service = require('../services/s3Service');
 
 const getCalls = async (req, res) => {
   try {
@@ -113,4 +114,55 @@ const processCall = async (req, res) => {
   }
 };
 
-module.exports = { getCalls, processCall };
+const deleteCall = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { callId } = req.params;
+
+    if (!callId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Call ID is required'
+      });
+    }
+
+    // Check if the call exists first
+    const call = await callService.getCallByUserIdAndCallId(userId, callId);
+    if (!call) {
+      return res.status(404).json({
+        success: false,
+        message: 'Call not found or you do not have permission to delete it'
+      });
+    }
+
+    // Delete the call from DynamoDB
+    await callService.deleteCall(userId, callId);
+    
+    // Delete the audio file from S3
+    try {
+      if (call.fileName) {
+        const s3Key = `${call.contextId}/${userId}/${call.fileName}`;
+        await s3Service.deleteFileFromS3(process.env.AUDIO_BUCKET, s3Key);
+      }
+    } catch (s3Error) {
+      // Log the error but don't fail the whole operation if S3 delete fails
+      console.error('Warning: Could not delete S3 file:', s3Error);
+      // Continue with the response, as the DB record was successfully deleted
+    }
+
+    res.json({
+      success: true,
+      message: 'Call deleted successfully',
+      data: { callId }
+    });
+  } catch (error) {
+    console.error('Error deleting call:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting call',
+      error: error.message
+    });
+  }
+};
+
+module.exports = { getCalls, processCall, deleteCall };

@@ -1,5 +1,5 @@
 const { DynamoDBClient, CreateTableCommand } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
 const { credential, awsRegion } = require("../config/credentials");
 
 const dynamoDBClient = new DynamoDBClient({
@@ -15,4 +15,4 @@ const APPS_TABLE = process.env.APPS_TABLE || "Apps";
 const TEMPLATES_TABLE = 'Templates';
 
 module.exports = { dynamoDB, dynamoDBClient,  GetCommand, PutCommand, QueryCommand, 
-    UpdateCommand, CreateTableCommand, USERS_TABLE, CALLS_TABLE, COMPANIES_TABLE, APPS_TABLE, TEMPLATES_TABLE };
+    UpdateCommand, DeleteCommand, CreateTableCommand, USERS_TABLE, CALLS_TABLE, COMPANIES_TABLE, APPS_TABLE, TEMPLATES_TABLE };
