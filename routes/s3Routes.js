@@ -22,6 +22,13 @@ const router = express.Router();
  *         schema:
  *           type: string
  *         description: The MIME type of the file (e.g., image/png, application/pdf)
+ *       - in: query
+ *         name: durationSeconds
+ *         required: false
+ *         schema:
+ *           type: number
+ *           format: float
+ *         description: The duration of the audio file in seconds
  *     responses:
  *       200:
  *         description: Successfully generated presigned URL
@@ -30,14 +37,17 @@ const router = express.Router();
  *             schema:
  *               type: object
  *               properties:
- *                 url:
+ *                 uploadURL:
  *                   type: string
  *                   description: The presigned URL for uploading a file
+ *                 fileName:
+ *                   type: string
+ *                   description: The name of the file
  *       400:
  *         description: Bad request if parameters are missing
  *       500:
  *         description: Server error
  */
-router.get("/generate-presigned-url", authenticateJWT,generatePreSignedUrl);
+router.get("/generate-presigned-url", authenticateJWT, generatePreSignedUrl);
 
 module.exports = router;

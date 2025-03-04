@@ -5,10 +5,14 @@ const { v4: uuidv4 } = require('uuid');
 
 const generatePreSignedUrl = async (req, res) => {
     try {
-        const { fileName, fileType} = req.query;
+        const { fileName, fileType, durationSeconds } = req.query;
         if (!fileName || !fileType) {
             return res.status(400).json({ error: "Missing fileName or fileType" });
         }
+        
+        // Parse durationSeconds as a number if provided
+        const duration = durationSeconds ? parseFloat(durationSeconds) : null;
+        
         const contextId= req.user.contextId;
         const userId = req.user.userId;
         const command = new PutObjectCommand({
@@ -28,8 +32,9 @@ const generatePreSignedUrl = async (req, res) => {
                 contextId: contextId,
                 fileName : fileName,
                 fileType : fileType,
-
                 createdAt: new Date().toISOString(),
+                // Add the duration if provided
+                ...(duration !== null && { durationSeconds: duration })
             },
         });
         await dynamoDBClient.send(dbCommand);
