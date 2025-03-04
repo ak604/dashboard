@@ -34,6 +34,12 @@ const router = express.Router();
  *         schema:
  *           type: string
  *         description: Pagination token for next page of results
+ *       - in: query
+ *         name: include_download_urls
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Whether to include presigned download URLs for each call's audio file
  *     responses:
  *       200:
  *         description: Successfully retrieved calls
@@ -47,53 +53,43 @@ const router = express.Router();
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Call'
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                       callId:
+ *                         type: string
+ *                       contextId:
+ *                         type: string
+ *                       fileName:
+ *                         type: string
+ *                       fileType:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       durationSeconds:
+ *                         type: number
+ *                       transcription:
+ *                         type: string
+ *                       templates:
+ *                         type: object
+ *                         additionalProperties: true
+ *                       downloadURL:
+ *                         type: string
+ *                         description: Presigned URL for downloading the audio file (only included when include_download_urls=true)
  *                 nextToken:
  *                   type: string
  *                   description: Token for next page of results
  *                   example: "eyJ1c2VySWQiOiJ1c2VyMTIzIiwiY2FsbElkIjoiY2FsbDQ1NiJ9"
  *       401:
  *         description: Authentication required
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Authentication required"
  *       403:
  *         description: Invalid or expired token
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Invalid or expired token"
  *       404:
  *         description: Call not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Call not found"
  *       500:
  *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Error retrieving calls"
- *                 error:
- *                   type: object
  */
 router.get('/', authenticateJWT, callController.getCalls);
 

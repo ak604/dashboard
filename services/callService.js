@@ -1,4 +1,6 @@
 const { dynamoDB, QueryCommand, GetCommand, UpdateCommand, CALLS_TABLE, DeleteCommand } = require('../config/db');
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { s3Client, GetObjectCommand } = require("../config/aws");
 
 const getCallsByUserId = async (userId, limit = 10, nextToken = null) => {
   try {
@@ -144,9 +146,25 @@ const deleteCall = async (userId, callId) => {
   }
 };
 
+const getCallDownloadUrl = async (call) => {
+  if (!call || !call.fileName || !call.contextId || !call.userId) {
+    throw new Error('Invalid call data for generating download URL');
+  }
+  
+  const fileKey = `${call.contextId}/${call.userId}/${call.fileName}`;
+  
+  const command = new GetObjectCommand({
+    Bucket: process.env.AUDIO_BUCKET,
+    Key: fileKey
+  });
+  
+  return getSignedUrl(s3Client, command, { expiresIn: 300 });
+};
+
 module.exports = { 
   getCallsByUserId, 
   getCallByUserIdAndCallId,
   updateCallTemplates,
-  deleteCall
+  deleteCall,
+  getCallDownloadUrl
 };

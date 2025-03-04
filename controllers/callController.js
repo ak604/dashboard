@@ -21,6 +21,25 @@ const getCalls = async (req, res) => {
     // Get paginated results
     const result = await callService.getCallsByUserId(userId, limit, nextToken);
     
+    // If the include_download_urls query parameter is set to true
+    if (req.query.include_download_urls === 'true') {
+      // Add download URLs to each call that has a file
+      const enhancedItems = await Promise.all(result.items.map(async (call) => {
+        if (call.fileName) {
+          try {
+            const downloadURL = await callService.getCallDownloadUrl(call);
+            return { ...call, downloadURL };
+          } catch (error) {
+            console.warn(`Could not generate download URL for call ${call.callId}:`, error);
+            return call; // Return call without download URL if there's an error
+          }
+        }
+        return call;
+      }));
+      
+      result.items = enhancedItems;
+    }
+    
     res.json({
       success: true,
       data: result.items,
