@@ -49,12 +49,17 @@ router.post("/", authenticateJWT, userController.createUser);
 
 /**
  * @swagger
- * /users/{userId}:
+ * /users/{contextId}/{userId}:
  *   get:
  *     summary: Get user details
  *     description: Fetch details of a specific user.
  *     tags: [users]
  *     parameters:
+ *       - in: path
+ *         name: contextId
+ *         required: true
+ *         schema:
+ *           type: string
  *       - in: path
  *         name: userId
  *         required: true
@@ -64,6 +69,6 @@ router.post("/", authenticateJWT, userController.createUser);
  *       200:
  *         description: user details returned
  */
-router.get('/:userId', authenticateJWT,userController.getUser);
+router.get('/:contextId/:userId', authenticateJWT,userController.getUser);
 
 module.exports = router;

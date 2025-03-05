@@ -24,20 +24,11 @@ const tables = [
         ],
         AttributeDefinitions: [
             { AttributeName: "appId", AttributeType: "S" },
-            { AttributeName: "packageId", AttributeType: "S" }
         ],
         ProvisionedThroughput: {
             ReadCapacityUnits: 1,
             WriteCapacityUnits: 1
-        },
-        GlobalSecondaryIndexes: [
-            {
-                IndexName: "PackageIdIndex",
-                KeySchema: [{ AttributeName: "packageId", KeyType: "HASH" }],
-                Projection: { ProjectionType: "ALL" },
-                ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 }
-            }
-        ]
+        }
     },
     {
         TableName: "Companies",

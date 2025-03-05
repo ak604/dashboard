@@ -17,7 +17,7 @@ const createUser = async (req, res) => {
 
 const getUser = async (req, res) => {
     try {
-      const user = await userService.getUser(req.companyId, req.params.userId);
+      const user = await userService.getUser(req.params.contextId, req.params.userId);
       if (user) {
         res.status(200).send(user);
       } else {

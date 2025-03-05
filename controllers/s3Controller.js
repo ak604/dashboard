@@ -3,6 +3,9 @@ const {s3Client,  PutObjectCommand, GetObjectCommand} = require("../config/aws")
 const {dynamoDBClient, PutCommand, CALLS_TABLE} = require("../config/db");
 const { v4: uuidv4 } = require('uuid');
 const callService = require("../services/callService");
+const appService = require("../services/appService");
+const userService = require("../services/userService");
+const logger = require("../utils/logger");
 
 const generatePreSignedUrl = async (req, res) => {
     try {
@@ -14,8 +17,34 @@ const generatePreSignedUrl = async (req, res) => {
         // Parse durationSeconds as a number if provided
         const duration = durationSeconds ? parseFloat(durationSeconds) : null;
         
-        const contextId= req.user.contextId;
+        const contextId = req.user.contextId;
         const userId = req.user.userId;
+        
+        // Process payment if duration is provided and context is an app
+        let paymentInfo = null;
+        if (duration !== null && contextId.startsWith('app_')) {
+            try {
+                // Get cost for the "audio_upload" task
+                const cost = await appService.getCostForTask(contextId, "audio_upload", duration);
+                
+                // Deduct from user wallet
+                await userService.deductFromUserWallet(contextId, userId, cost.tokenName, cost.tokenAmount);
+                
+                paymentInfo = {
+                    tokenName: cost.tokenName,
+                    tokenAmount: cost.tokenAmount,
+                    durationSeconds: duration
+                };
+                
+                logger.info(`Payment processed: ${cost.tokenAmount} ${cost.tokenName} tokens for ${duration}s audio`);
+            } catch (error) {
+                return res.status(402).json({ 
+                    error: "Payment Required", 
+                    message: error.message 
+                });
+            }
+        }
+        
         const command = new PutObjectCommand({
             Bucket: process.env.AUDIO_BUCKET,
             Key: contextId + "/" + userId + "/" + fileName ,
@@ -35,12 +64,17 @@ const generatePreSignedUrl = async (req, res) => {
                 fileType : fileType,
                 createdAt: new Date().toISOString(),
                 expires_at: Math.floor(Date.now() / 1000) + 30*86400 ,
-                ...(duration !== null && { durationSeconds: duration })
+                ...(duration !== null && { durationSeconds: duration }),
+                ...(paymentInfo !== null && { payment: paymentInfo })
             },
         });
         await dynamoDBClient.send(dbCommand);
         
-        res.json({ uploadURL, fileName });
+        res.json({ 
+            uploadURL, 
+            fileName, 
+            ...(paymentInfo !== null && { payment: paymentInfo })
+        });
     } catch (error) {
         console.error("Error generating pre-signed URL:", error);
         res.status(500).json({ error: "Internal Server Error" });
