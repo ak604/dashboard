@@ -213,6 +213,29 @@ const deductFromUserWallet = async (contextId, userId, tokenName, amount) => {
   }
 };
 
+/**
+ * Get all users for a specific context
+ * @param {string} contextId - Context ID (app or company)
+ * @returns {Promise<Array>} List of users
+ */
+const getUsersByContext = async (contextId) => {
+  try {
+    const params = {
+      TableName: USERS_TABLE,
+      KeyConditionExpression: 'contextId = :contextId',
+      ExpressionAttributeValues: {
+        ':contextId': contextId
+      }
+    };
+    
+    const result = await dynamoDB.send(new QueryCommand(params));
+    return result.Items || [];
+  } catch (error) {
+    console.error('Error getting users by context:', error);
+    throw error;
+  }
+};
+
 module.exports = {
     createUser,
     getUser,
@@ -223,5 +246,6 @@ module.exports = {
     createUserWithGoogle,
     updateUserWallet,
     getUserWallet,
-    deductFromUserWallet
+    deductFromUserWallet,
+    getUsersByContext
 };

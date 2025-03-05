@@ -18,6 +18,7 @@ const workerManager = require('./services/workerManager');
 const app = express();
 const appRoutes = require('./routes/appRoutes');
 const templateRoutes = require('./routes/templateRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -32,6 +33,7 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use('/apps', appRoutes);
 app.use('/templates', templateRoutes);
+app.use('/admin', adminRoutes);
 
 // Add health check endpoint
 app.get('/health', (req, res) => {
