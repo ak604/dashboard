@@ -22,10 +22,10 @@ const generatePreSignedUrl = async (req, res) => {
         
         // Process payment if duration is provided and context is an app
         let paymentInfo = null;
-        if (duration !== null && contextId.startsWith('app_')) {
+        if (duration !== null ) {
             try {
                 // Get cost for the "audio_upload" task
-                const cost = await appService.getCostForTask(contextId, "audio_upload", duration);
+                const cost = await appService.getCostForTask(contextId, "transcription", duration);
                 
                 // Deduct from user wallet
                 await userService.deductFromUserWallet(contextId, userId, cost.tokenName, cost.tokenAmount);
