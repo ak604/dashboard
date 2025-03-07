@@ -19,6 +19,7 @@ const app = express();
 const appRoutes = require('./routes/appRoutes');
 const templateRoutes = require('./routes/templateRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const appLoadRoutes = require('./routes/appLoadRoutes');
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -34,6 +35,7 @@ app.use("/users", userRoutes);
 app.use('/apps', appRoutes);
 app.use('/templates', templateRoutes);
 app.use('/admin', adminRoutes);
+app.use('/app', appLoadRoutes);
 
 // Add health check endpoint
 app.get('/health', (req, res) => {

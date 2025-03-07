@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const authenticateJWT = require('../middlewares/authMiddleware');
 const appController = require('../controllers/appController');
-
 /**
  * @swagger
  * /apps:
@@ -119,5 +118,6 @@ router.get('/:appId', authenticateJWT, appController.getApp);
  *         description: Server error
  */
 router.put('/:appId/costs', authenticateJWT, appController.updateAppCosts);
+
 
 module.exports = router; 
