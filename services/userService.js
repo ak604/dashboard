@@ -236,6 +236,42 @@ const getUsersByContext = async (contextId) => {
   }
 };
 
+/**
+ * Update user with rewards and last reward time
+ * @param {string} contextId - Context ID
+ * @param {string} userId - User ID
+ * @param {Object} wallet - Updated wallet data
+ * @param {string} lastRewardTime - ISO timestamp of when rewards were applied
+ * @returns {Promise<Object>} Updated user
+ */
+const updateUserWithRewards = async (contextId, userId, wallet, lastRewardTime) => {
+  try {
+    // Get the current user data
+    const user = await getUser(contextId, userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Update the user with the new wallet and last reward time
+    const params = {
+      TableName: USERS_TABLE,
+      Key: { contextId, userId },
+      UpdateExpression: "SET wallet = :wallet, lastRewardTime = :lastRewardTime",
+      ExpressionAttributeValues: {
+        ":wallet": wallet,
+        ":lastRewardTime": lastRewardTime
+      },
+      ReturnValues: "ALL_NEW"
+    };
+
+    const result = await dynamoDB.send(new UpdateCommand(params));
+    return result.Attributes;
+  } catch (error) {
+    console.error("Error updating user with rewards:", error);
+    throw error;
+  }
+};
+
 module.exports = {
     createUser,
     getUser,
@@ -247,5 +283,6 @@ module.exports = {
     updateUserWallet,
     getUserWallet,
     deductFromUserWallet,
-    getUsersByContext
+    getUsersByContext,
+    updateUserWithRewards
 };

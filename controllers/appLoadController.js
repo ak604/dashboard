@@ -1,9 +1,11 @@
 const userService = require('../services/userService');
 const appService = require('../services/appService');
+const rewardService = require('../services/rewardService');
 const logger = require('../utils/logger');
 
 /**
  * Load application initialization data including user and app details
+ * Apply rewards only if 24 hours have passed since last reward
  */
 const loadAppData = async (req, res) => {
   try {
@@ -17,11 +19,11 @@ const loadAppData = async (req, res) => {
       });
     }
     
-    
-    // Fetch user data and app data in parallel
-    const [userData, appData] = await Promise.all([
+    // Fetch user data, app data, and rewards data in parallel
+    const [userData, appData, rewards] = await Promise.all([
       userService.getUser(contextId, userId),
-      appService.getApp(contextId)
+      appService.getApp(contextId),
+      rewardService.getRewards(contextId)
     ]);
     
     // Handle case where user is not found
@@ -40,6 +42,55 @@ const loadAppData = async (req, res) => {
       });
     }
     
+    // Initialize user rewards array
+    const userRewards = [];
+    let updatedWallet = { ...(userData.wallet || {}) };
+    
+    // Check if we should apply rewards (if 24 hours have passed since last reward)
+    const now = new Date();
+    const lastRewardTime = userData.lastRewardTime ? new Date(userData.lastRewardTime) : null;
+    const shouldApplyRewards = !lastRewardTime || 
+      (now.getTime() - lastRewardTime.getTime() >=  60 * 1000);
+    
+    if (shouldApplyRewards) {
+      // Filter active rewards
+      const activeRewards = rewards.filter(reward => reward.active === true);
+      
+      // Process each active reward and apply it to the user's wallet
+      for (const reward of activeRewards) {
+        // Track which rewards we're applying
+        const rewardTokens = {};
+        
+        // Apply each token in the reward to the user's wallet
+        for (const tokenReward of reward.rewards) {
+          const { tokenName, tokenAmount } = tokenReward;
+          
+          // Add to the user's wallet
+          updatedWallet[tokenName] = (updatedWallet[tokenName] || 0) + tokenAmount;
+          
+          // Track what we're adding for this reward
+          rewardTokens[tokenName] = tokenAmount;
+        }
+        
+        // Add to applied rewards list
+        userRewards.push({
+          rewardId: reward.rewardId,
+          tokens: rewardTokens
+        });
+      }
+      
+      // Only update the user if rewards were applied
+      if (userRewards.length > 0) {
+        // Update the user's wallet and lastRewardTime in the database
+        await userService.updateUserWithRewards(
+          contextId, 
+          userId, 
+          updatedWallet, 
+          now.toISOString()
+        );
+      }
+    }
+    
     // Remove sensitive fields from user data
     const safeUserData = {
       userId: userData.userId,
@@ -47,7 +98,8 @@ const loadAppData = async (req, res) => {
       email: userData.email,
       picture: userData.picture,
       accessLevel: userData.accessLevel,
-      wallet: userData.wallet || {},
+      wallet: updatedWallet,  // Use the updated wallet
+      lastRewardTime: shouldApplyRewards && userRewards.length > 0 ? now.toISOString() : userData.lastRewardTime,
       createdAt: userData.createdAt
     };
     
@@ -56,7 +108,9 @@ const loadAppData = async (req, res) => {
       success: true,
       data: {
         user: safeUserData,
-        app: appData
+        app: appData,
+        userRewards: userRewards,
+        rewardsApplied: shouldApplyRewards && userRewards.length > 0
       }
     });
   } catch (error) {

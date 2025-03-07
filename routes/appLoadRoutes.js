@@ -7,14 +7,14 @@ const authenticateJWT = require('../middlewares/authMiddleware');
  * @swagger
  * /app/load:
  *   get:
- *     summary: Load app initialization data
- *     description: Fetches user data and app data for the current app context
+ *     summary: Load app initialization data and apply rewards
+ *     description: Fetches user data and app data for the current app context. Also applies active rewards to the user's wallet.
  *     tags: [app]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
- *         description: App data loaded successfully
+ *         description: App data loaded and rewards applied successfully
  *         content:
  *           application/json:
  *             schema:
@@ -45,7 +45,7 @@ const authenticateJWT = require('../middlewares/authMiddleware');
  *                           type: object
  *                           additionalProperties:
  *                             type: number
- *                           description: Map of token names to amounts
+ *                           description: Map of token names to amounts (after rewards applied)
  *                           example:
  *                             gold: 100
  *                             silver: 200
@@ -67,6 +67,18 @@ const authenticateJWT = require('../middlewares/authMiddleware');
  *                         createdAt:
  *                           type: string
  *                           format: date-time
+ *                     userRewards:
+ *                       type: array
+ *                       description: List of rewards that were applied to the user's wallet
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           rewardId:
+ *                             type: string
+ *                           tokens:
+ *                             type: object
+ *                             additionalProperties:
+ *                               type: number
  *       400:
  *         description: Invalid request or authentication
  *       401:

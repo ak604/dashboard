@@ -20,6 +20,7 @@ const appRoutes = require('./routes/appRoutes');
 const templateRoutes = require('./routes/templateRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const appLoadRoutes = require('./routes/appLoadRoutes');
+const rewardRoutes = require('./routes/rewardRoutes');
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -36,6 +37,7 @@ app.use('/apps', appRoutes);
 app.use('/templates', templateRoutes);
 app.use('/admin', adminRoutes);
 app.use('/app', appLoadRoutes);
+app.use('/rewards', rewardRoutes);
 
 // Add health check endpoint
 app.get('/health', (req, res) => {
@@ -52,18 +54,31 @@ app.use((err, req, res, next) => {
   res.status(500).send({ message: 'Something went wrong!', error: err.message });
 });
 
-// Start the worker manager
-workerManager.start();
+// Create HTTP server instance at the top-level scope
+let server;
 
 // Graceful shutdown handling
 const gracefulShutdown = async () => {
     console.log('Received shutdown signal');
     
     // Stop accepting new requests
-    server.close(() => {
-        console.log('Server closed');
-        
-        // Stop worker processes
+    if (server) {
+        server.close(() => {
+            console.log('Server closed');
+            
+            // Stop worker processes
+            workerManager.stop()
+                .then(() => {
+                    console.log('Workers stopped');
+                    process.exit(0);
+                })
+                .catch(error => {
+                    console.error('Error stopping workers:', error);
+                    process.exit(1);
+                });
+        });
+    } else {
+        console.log('Server not started, stopping workers');
         workerManager.stop()
             .then(() => {
                 console.log('Workers stopped');
@@ -73,7 +88,7 @@ const gracefulShutdown = async () => {
                 console.error('Error stopping workers:', error);
                 process.exit(1);
             });
-    });
+    }
 };
 
 process.on('SIGTERM', () => gracefulShutdown());
@@ -89,14 +104,10 @@ const startServer = async () => {
     });
 
     const PORT = process.env.PORT || 3000;
-    const server = app.listen(PORT, () => {
+    // Assign to the top-level server variable
+    server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Swagger Docs available at http://localhost:${PORT}/api-docs`);
-    });
-
-    // Store the server instance for graceful shutdown
-    server.on('close', () => {
-        console.log('Server closed');
     });
 
     const requiredEnvVars = [

@@ -124,4 +124,44 @@ const createAllTables = async () => {
     }
 };
 
+// Create Rewards table
+const createRewardsTable = async () => {
+  try {
+    const params = {
+      TableName: 'Rewards',
+      KeySchema: [
+        { AttributeName: 'contextId', KeyType: 'HASH' }, // Partition key
+        { AttributeName: 'rewardId', KeyType: 'RANGE' }  // Sort key
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'contextId', AttributeType: 'S' },
+        { AttributeName: 'rewardId', AttributeType: 'S' }
+      ],
+      ProvisionedThroughput: {
+        ReadCapacityUnits: 5,
+        WriteCapacityUnits: 5
+      }
+    };
+
+    await createTable(params);
+    return true;
+  } catch (error) {
+    console.error('Error creating Rewards table:', error);
+    return false;
+  }
+};
+
+// Add to the main function
+const createTables = async () => {
+  try {
+    // ... existing tables
+    await createRewardsTable();
+    // ... 
+    console.log('All tables created successfully');
+  } catch (error) {
+    console.error('Error creating tables:', error);
+  }
+};
+
 createAllTables();
+createTables();
