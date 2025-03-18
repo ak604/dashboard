@@ -21,6 +21,7 @@ const templateRoutes = require('./routes/templateRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const appLoadRoutes = require('./routes/appLoadRoutes');
 const rewardRoutes = require('./routes/rewardRoutes');
+const walletTransactionRoutes = require('./routes/walletTransactionRoutes');
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -38,6 +39,7 @@ app.use('/templates', templateRoutes);
 app.use('/admin', adminRoutes);
 app.use('/app', appLoadRoutes);
 app.use('/rewards', rewardRoutes);
+app.use('/wallet-transactions', walletTransactionRoutes);
 
 // Add health check endpoint
 app.get('/health', (req, res) => {

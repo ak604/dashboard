@@ -151,11 +151,47 @@ const createRewardsTable = async () => {
   }
 };
 
+// Create WalletTransactions table
+const createWalletTransactionsTable = async () => {
+  try {
+    console.log('Creating WalletTransactions table...');
+    
+    const params = {
+      TableName: 'WalletTransactions',
+      KeySchema: [
+        { AttributeName: 'contextUserId', KeyType: 'HASH' },  // Partition key (composite of contextId + userId)
+        { AttributeName: 'epochTime', KeyType: 'RANGE' }      // Sort key
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'contextUserId', AttributeType: 'S' },
+        { AttributeName: 'epochTime', AttributeType: 'N' }
+      ],
+      ProvisionedThroughput: {
+        ReadCapacityUnits: 5,
+        WriteCapacityUnits: 5
+      }
+    };
+
+    // Using the createTable helper function (assuming it exists in your code)
+    const result = await createTable(params);
+    
+    if (result) {
+      console.log('WalletTransactions table created successfully');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error creating WalletTransactions table:', error);
+    return false;
+  }
+};
+
 // Add to the main function
 const createTables = async () => {
   try {
     // ... existing tables
     await createRewardsTable();
+    await createWalletTransactionsTable();
     // ... 
     console.log('All tables created successfully');
   } catch (error) {

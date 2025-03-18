@@ -14,6 +14,7 @@ const COMPANIES_TABLE = process.env.COMPANIES_TABLE || "Companies";
 const APPS_TABLE = process.env.APPS_TABLE || "Apps";
 const TEMPLATES_TABLE = 'Templates';
 const REWARDS_TABLE = process.env.REWARDS_TABLE || 'Rewards';
+const WALLET_TRANSACTIONS_TABLE = process.env.WALLET_TRANSACTIONS_TABLE || 'WalletTransactions';
 
 module.exports = { 
   dynamoDB, 
@@ -29,5 +30,6 @@ module.exports = {
   COMPANIES_TABLE, 
   APPS_TABLE, 
   TEMPLATES_TABLE,
-  REWARDS_TABLE
+  REWARDS_TABLE,
+  WALLET_TRANSACTIONS_TABLE
 };

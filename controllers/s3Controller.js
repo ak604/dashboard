@@ -6,29 +6,48 @@ const callService = require("../services/callService");
 const appService = require("../services/appService");
 const userService = require("../services/userService");
 const logger = require("../utils/logger");
+const walletTransactionService = require('../services/walletTransactionService');
 
 const generatePreSignedUrl = async (req, res) => {
     try {
-        const { fileName, fileType, durationSeconds } = req.query;
-        if (!fileName || !fileType) {
-            return res.status(400).json({ error: "Missing fileName or fileType" });
-        }
-        
-        // Parse durationSeconds as a number if provided
-        const duration = durationSeconds ? parseFloat(durationSeconds) : null;
-        
-        const contextId = req.user.contextId;
+        const fileName = req.body.fileName;
+        const fileType = req.body.fileType;
+        const contextId = req.body.contextId;
         const userId = req.user.userId;
         
-        // Process payment if duration is provided and context is an app
+        // Duration in seconds, if provided
+        const duration = req.body.duration !== undefined ? Number(req.body.duration) : null;
+        
+        // Check for required fields
+        if (!fileName || !fileType) {
+            return res.status(400).json({ error: "Missing required parameters" });
+        }
+        
+        // Process payment for audio duration if applicable
         let paymentInfo = null;
-        if (duration !== null ) {
+        
+        if (duration !== null && contextId.startsWith('app_')) {
             try {
                 // Get cost for the "audio_upload" task
-                const cost = await appService.getCostForTask(contextId, "transcription", duration);
+                const cost = await appService.getCostForTask(contextId, "audio_upload", duration);
                 
                 // Deduct from user wallet
                 await userService.deductFromUserWallet(contextId, userId, cost.tokenName, cost.tokenAmount);
+                
+                // Record the transaction
+                await walletTransactionService.createTransaction(
+                    contextId,
+                    userId,
+                    walletTransactionService.TRANSACTION_TYPES.DEBIT,
+                    cost.tokenName,
+                    cost.tokenAmount,
+                    `Payment for ${duration}s audio upload`,
+                    {
+                        fileName,
+                        durationSeconds: duration,
+                        source: 'audio_upload'
+                    }
+                );
                 
                 paymentInfo = {
                     tokenName: cost.tokenName,
@@ -47,7 +66,7 @@ const generatePreSignedUrl = async (req, res) => {
         
         const command = new PutObjectCommand({
             Bucket: process.env.AUDIO_BUCKET,
-            Key: contextId + "/" + userId + "/" + fileName ,
+            Key: contextId + "/" + userId + "/" + fileName,
             ContentType: fileType,
         });
        
@@ -60,10 +79,10 @@ const generatePreSignedUrl = async (req, res) => {
                 callId: callId,  
                 userId: userId,
                 contextId: contextId,
-                fileName : fileName,
-                fileType : fileType,
+                fileName: fileName,
+                fileType: fileType,
                 createdAt: new Date().toISOString(),
-                expires_at: Math.floor(Date.now() / 1000) + 30*86400 ,
+                expires_at: Math.floor(Date.now() / 1000) + 30*86400,
                 ...(duration !== null && { durationSeconds: duration }),
                 ...(paymentInfo !== null && { payment: paymentInfo })
             },
@@ -71,13 +90,20 @@ const generatePreSignedUrl = async (req, res) => {
         await dynamoDBClient.send(dbCommand);
         
         res.json({ 
-            uploadURL, 
-            fileName, 
-            ...(paymentInfo !== null && { payment: paymentInfo })
+            success: true,
+            data: {
+                uploadURL,
+                callId,
+                payment: paymentInfo
+            }
         });
     } catch (error) {
-        console.error("Error generating pre-signed URL:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        logger.error("Error generating presigned URL:", error);
+        res.status(500).json({ 
+            success: false,
+            error: "Error generating presigned URL",
+            message: error.message
+        });
     }
 };
 

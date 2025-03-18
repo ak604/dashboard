@@ -1,6 +1,7 @@
 const userService = require('../services/userService');
 const appService = require('../services/appService');
 const rewardService = require('../services/rewardService');
+const walletTransactionService = require('../services/walletTransactionService');
 const logger = require('../utils/logger');
 
 /**
@@ -52,6 +53,9 @@ const loadAppData = async (req, res) => {
     const shouldApplyRewards = !lastRewardTime || 
       (now.getTime() - lastRewardTime.getTime() >=  60 * 1000);
     
+    // Track transactions to create
+    const transactions = [];
+    
     if (shouldApplyRewards) {
       // Filter active rewards
       const activeRewards = rewards.filter(reward => reward.active === true);
@@ -70,6 +74,20 @@ const loadAppData = async (req, res) => {
           
           // Track what we're adding for this reward
           rewardTokens[tokenName] = tokenAmount;
+          
+          // Create transaction record
+          transactions.push({
+            contextId,
+            userId,
+            type: walletTransactionService.TRANSACTION_TYPES.CREDIT,
+            tokenName,
+            tokenAmount,
+            description: `Daily reward: ${reward.rewardId}`,
+            metadata: {
+              rewardId: reward.rewardId,
+              source: 'daily_reward'
+            }
+          });
         }
         
         // Add to applied rewards list
@@ -88,6 +106,9 @@ const loadAppData = async (req, res) => {
           updatedWallet, 
           now.toISOString()
         );
+        
+        // Create all transaction records
+        await walletTransactionService.batchCreateTransactions(transactions);
       }
     }
     
